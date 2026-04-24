@@ -10,7 +10,7 @@ public class NavigationController {
     
 
     @GetMapping("")
-    public String getMethodName() {
+    public String navigationControllerHealth() {
         return new String("Navigation Controller works fine");
     }
 }

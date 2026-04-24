@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class PerformanceController {
 
     @GetMapping("")
-    public String getMethodName() {
+    public String performanceControllerHealth() {
         return new String("Performance Controller works fine");
     }
     
