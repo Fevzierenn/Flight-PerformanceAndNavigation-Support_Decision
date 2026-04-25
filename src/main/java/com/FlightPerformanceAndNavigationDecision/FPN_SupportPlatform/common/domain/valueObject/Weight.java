@@ -2,6 +2,8 @@ package com.FlightPerformanceAndNavigationDecision.FPN_SupportPlatform.common.do
 
 import javax.management.RuntimeErrorException;
 
+import com.FlightPerformanceAndNavigationDecision.FPN_SupportPlatform.common.exception.BusinessException;
+
 import lombok.Getter;
 
 @Getter
@@ -14,7 +16,7 @@ public class Weight {
                 this.value = value;
         }
         else{
-            throw new RuntimeException("Weight cannot be negative or zero");
+            throw new BusinessException("Weight cannot be negative or zero");
         }
     }
 
