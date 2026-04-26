@@ -25,20 +25,20 @@ public class CalculateTakeoffPerformanceUseCase {
         this.calculator = calculator;
     }
 
-     public TakeOffPerformanceResult execute(Aircraft aircraft, Airport airport, Weight takeOffWeight){
+     public TakeOffPerformanceResult execute(String aircraftType, String airportIcaoCode, double takeOffWeight){
                 Aircraft aircraftModel = aircraftRepository
-                .findByType(aircraft.getType())
+                .findByType(aircraftType)
                 .orElseThrow(() ->
-                        new BusinessException("Aircraft not found: " + aircraft.getType())
+                        new BusinessException("Aircraft not found: " + aircraftType)
                 );        
                 
                 Airport airportModel = airportRepository
-                .findByIcaoCode(airport.getIcaoCode())
+                .findByIcaoCode(airportIcaoCode)
                 .orElseThrow(() ->
-                        new BusinessException("Airport not found: " + airport.getIcaoCode())
+                        new BusinessException("Airport not found: " + airportIcaoCode)
                 );
 
-        return calculator.calculate(aircraftModel, airportModel, takeOffWeight);
+        return calculator.calculate(aircraftModel, airportModel, new Weight(takeOffWeight));
 
                 
 
