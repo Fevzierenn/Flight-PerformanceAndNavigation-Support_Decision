@@ -6,13 +6,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 
 @RestController
-@RequestMapping("/performance")
+@RequestMapping("/api/performance")
 public class PerformanceController {
 
     @GetMapping("")
     public String performanceControllerHealth() {
         return new String("Performance Controller works fine");
     }
+
+
     
     
 }
