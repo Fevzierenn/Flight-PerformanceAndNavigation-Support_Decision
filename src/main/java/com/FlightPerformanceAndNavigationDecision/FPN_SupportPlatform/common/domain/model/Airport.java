@@ -1,5 +1,7 @@
 package com.FlightPerformanceAndNavigationDecision.FPN_SupportPlatform.common.domain.model;
 
+import com.FlightPerformanceAndNavigationDecision.FPN_SupportPlatform.common.domain.valueObject.Coordinate;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -9,7 +11,6 @@ public class Airport {
 
     private final String icaoCode;      //LTFS
     private final double runwayLength;  //metre
-    private final double latitude;
-    private final double longitude;
+    private final Coordinate coordinate;
     
 }
