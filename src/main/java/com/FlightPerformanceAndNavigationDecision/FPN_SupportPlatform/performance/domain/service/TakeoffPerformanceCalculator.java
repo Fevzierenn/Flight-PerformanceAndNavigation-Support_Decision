@@ -37,16 +37,22 @@ public class TakeoffPerformanceCalculator {
         return new TakeOffPerformanceResult(requiredRunwayLength);
     }
 
-
+    //this method validate weight of aircraft for takeoff via range of aircraft weight.
     private void validateMTOW(Aircraft aircraft, Weight takeOffWeight){
         if(takeOffWeight.isGreaterThan(aircraft.getMaxTakeOffWeight())){
             throw new BusinessException("Maximum takeoff weight exceeded.");
         }
     }
 
+    // Minimum required runway length for takeoff under simplified assumptions.
     private double calculateRequiredRunwayLength(Aircraft aircraft,Weight takeOffWeight){
-        return aircraft.getBaseTakeOffDistance() *( takeOffWeight.ratioTo(aircraft.getMaxTakeOffWeight()));
-    }
+        double resultMultiplier = 1.15;
+        double weightPenaltyMultiplier = 1.3;
+        double ratio = takeOffWeight.ratioTo(aircraft.getMaxTakeOffWeight());
+        double weightPenalty = Math.pow(ratio, weightPenaltyMultiplier);
+        double result = aircraft.getBaseTakeOffDistance() * (1 + (0.4 * weightPenalty)) * resultMultiplier;
+        return result;
+}
           
     
 }
