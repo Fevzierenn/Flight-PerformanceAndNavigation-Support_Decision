@@ -9,4 +9,7 @@ public class Airport {
 
     private final String icaoCode;      //LTFS
     private final double runwayLength;  //metre
+    private final double latitude;
+    private final double longitude;
+    
 }
