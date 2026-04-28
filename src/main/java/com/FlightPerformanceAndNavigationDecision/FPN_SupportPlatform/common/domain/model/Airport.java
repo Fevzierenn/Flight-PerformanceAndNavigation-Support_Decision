@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class Airport {
 
+    private final String airportName;
     private final String icaoCode;      //LTFS
     private final double runwayLength;  //metre
     private final Coordinate coordinate;
