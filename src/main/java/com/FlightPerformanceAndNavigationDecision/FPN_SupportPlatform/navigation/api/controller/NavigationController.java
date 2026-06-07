@@ -26,12 +26,6 @@ public class NavigationController {
         this.calculateRouteDistanceUseCase = calculateRouteDistanceUseCase;
     }
 
-
-    @GetMapping("")
-    public String navigationControllerHealth() {
-        return new String("Navigation Controller works fine");
-    }
-
     @PostMapping("/route-distance")
     public ResponseEntity<CalculateRouteDistanceResponse> calculateRouteDistance(@Valid @RequestBody CalculateRouteDistanceRequest request) {
         NavigationResult result = calculateRouteDistanceUseCase.execute(request.getDepartureAirportIcaoCode(), request.getArrivalAirportIcaoCode());
