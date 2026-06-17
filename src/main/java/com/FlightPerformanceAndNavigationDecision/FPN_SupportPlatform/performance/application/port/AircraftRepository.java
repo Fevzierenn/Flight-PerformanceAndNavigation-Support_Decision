@@ -6,6 +6,4 @@ import com.FlightPerformanceAndNavigationDecision.FPN_SupportPlatform.common.dom
 
 public interface AircraftRepository {
     Optional<Aircraft> findByType(String type);
-
-    
 }
