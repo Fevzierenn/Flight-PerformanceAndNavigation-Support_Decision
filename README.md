@@ -50,11 +50,6 @@ Validates aerodynamic and structural constraints at takeoff.
 *   Lombok
 *   Jakarta Validation API
 
-### Frontend
-*   React 18 (Loaded via UMD CDN to bypass local file CORS constraints)
-*   Vanilla CSS
-*   Babel (Standalone transpilation)
-
 ---
 
 ## Core API Endpoints
@@ -128,10 +123,6 @@ Validates aerodynamic and structural constraints at takeoff.
    ```
 3. The server will start on port `8080`. You can access the API endpoints at `http://localhost:8080`.
 
-### Running the Frontend Dashboard
-1. Locate the `flight-decision-frontend` folder.
-2. Open `index.html` directly in a web browser.
-3. Ensure the Spring Boot backend is active on `localhost:8080` to enable real-time dashboard calculations.
 
 ---
 
