@@ -1,97 +1,142 @@
-# Flight-PerformanceAndNavigation-Support_Decision
+# Flight Performance and Navigation Support Decision Platform
 
-Project Structure and Relationship Diagram
-This document presents a comprehensive, precise, and structural overview of the AeroDecision (Flight Performance & Navigation Support Decision) platform. It details the system architecture, file layout, bounded context separation, sequence workflows, and class relationships using standard visual modeling.
+AeroDecision is a domain-driven, decoupled software platform designed to assist flight dispatchers and operations controllers in evaluating flight plan feasibility. By assessing takeoff performance margins, route distances, diversion alternatives, and fuel limitations, the platform determines whether a planned flight is Safe, Risky, or Not Allowed.
 
-```markdown
-# AeroDecision (Flight Performance & Navigation Support Decision Platform)
+## Architecture and Design Patterns
 
-AeroDecision is a clean, modular flight decision support platform designed to evaluate flight safety parameters. The system processes performance, navigation, fuel, and general risk analysis data to determine whether a flight is safe to operate.
+The platform is designed following Clean Architecture, Domain-Driven Design (DDD), and Hexagonal (Ports and Adapters) principles.
 
----
+### Key Architectural Concepts
 
-## 1. General Decision Logic & Flow
-
-The system takes a flight input and evaluates it through the following logical workflow to determine the final safety status:
-
-
-```
-
-[Flight Input]
-│
-├──> Performance ───> "Can it take off given the runway conditions?"
-├──> Navigation  ───> "Is the route and alternative airport suitable?"
-├──> Fuel        ───> "Is there enough fuel requirement?"
-└──> Risk        ───> "General decision and constraints evaluation"
-│
-▼
-[Flight Status]: SAFE / RISKY / NOT_ALLOWED
-
-```
-
-<img width="1137" height="142" alt="AeroDecision Flow" src="https://github.com/user-attachments/assets/3d944565-8fb5-43c3-8da7-9705f5ad16c2" />
+*   **Bounded Contexts:** The domain is partitioned into isolated subdomains: Decision, Fuel, Navigation, and Performance. Each context contains its own API layer, application use cases, domain entities/services, and infrastructure persistence adapters.
+*   **Hexagonal Architecture:**
+    *   **Driving Adapters (API):** REST Controllers handle HTTP requests and DTO mappings.
+    *   **Application Boundary (Ports):** Use cases orchestrate domain actions and communicate with external resources via repository ports (interfaces).
+    *   **Domain Core:** Framework-independent models, services, rules, and value objects containing the actual aviation calculations and business checks.
+    *   **Driven Adapters (Infrastructure):** In-memory repositories implementing the repository ports to query mocked data without database dependencies.
+*   **Shared Kernel (Common):** Objects shared across multiple contexts, including coordinate values, weight structures, and business exception handlers.
 
 ---
 
-## 2. Directory Layout & Bounded Contexts
+## Core Subdomains
 
-The codebase is structured into **Bounded Contexts** under the primary package prefix `com.FlightPerformanceAndNavigationDecision.FPN_SupportPlatform`. Each bounded context represents a distinct functional domain:
+### 1. Decision Bounded Context
+Orchestrates and consolidates calculations from all other contexts.
+*   **EvaluateFlightUseCase:** Orchestrates the flow by fetching airport and aircraft models, running sub-context use cases, and calling the Decision Engine.
+*   **DecisionEngine:** Applies final safety thresholds. For example, it flags a flight as Risky if the required runway length exceeds 85 percent of the available runway, or if the fuel consumption exceeds 80 percent of capacity. It marks the flight as Not Allowed if absolute structural or safety limits are exceeded.
 
-<img width="1432" height="258" alt="Directory Layout" src="https://github.com/user-attachments/assets/0f3e5e44-f141-44ea-92eb-ff5bbb46605d" />
+### 2. Fuel Bounded Context
+Computes fuel sufficiency based on aircraft consumption rates and flight distance.
+*   **FuelCalculator:** Validates if the aircraft has the structural capacity to carry the required fuel (covering departure to arrival, diversion to alternative, and safety reserves).
 
-### Modules and Responsibilities
-* **`decision`**: The core orchestration layer that collects data from other contexts to make the final flight allowance decision.
-* **`performance`**: Evaluates takeoff performance based on airport constraints, runway length, and weather conditions.
-* **`navigation`**: Validates route distances and the suitability of alternate airports.
-* **`fuel`**: Calculates fuel requirements based on flight distance and reserve policies.
-* **`common`**: A **Shared Kernel** module containing shared data structures (`FlightId`, `Airport`, `Distance`) used across the project.
-* **`config`**: The centralized configuration layer handling Spring Bean definitions.
+### 3. Navigation Bounded Context
+Determines route distances using geospatial coordinates.
+*   **HaversineCalculator:** Implements the Haversine formula to compute great-circle distances between departure, destination, and alternative airport coordinates.
+*   **RouteDistanceCalculator:** Computes segment distances for both the main route and diversion route.
 
----
-
-## 3. Hexagonal (Ports & Adapters) Layering in Bounded Contexts
-
-Each bounded context (except `common` and `config`) strictly adheres to **Clean/Hexagonal Architecture** principles. The diagram below illustrates how the core domain logic is decoupled from external infrastructure (driving/driven adapters) using the `performance` context as an example:
-
-<img width="1469" height="449" alt="Hexagonal Architecture" src="https://github.com/user-attachments/assets/87cbbfe7-a73f-43b2-8d12-992b6adb2172" />
-
-### Layer Breakdown & Responsibilities
-
-<img width="1094" height="379" alt="Layer Descriptions" src="https://github.com/user-attachments/assets/f590b4b6-e094-41b0-b03c-d72876728ba0" />
-
-| Layer | Responsibility | Key Components / Examples |
-| :--- | :--- | :--- |
-| **Domain (Core)** | Pure business logic and rules, completely free of external framework dependencies. | `Flight`, `PerformanceRules`, `FuelPolicy` |
-| **Application (Ports)** | Defines Use Cases and Port interfaces that manage interaction with the outside world. | `EvaluateFlightUseCase`, `CalculateFuelPort` |
-| **Infrastructure (Adapters)** | Concrete implementations for external systems, databases, or HTTP endpoints. | `FlightRestController`, `JpaFlightRepository` |
+### 4. Performance Bounded Context
+Validates aerodynamic and structural constraints at takeoff.
+*   **TakeoffPerformanceCalculator:** Calculates the required takeoff runway length based on aircraft type and current takeoff weight.
+*   **RunWayLengthRule:** Validates whether the departure airport's runway is structurally long enough for the computed takeoff distance.
 
 ---
 
-## 4. Decision Orchestration Flow
+## Technology Stack
 
-The primary capability of the application is evaluating flight safety parameters. The decision engine acts as an orchestrator that invokes calculations from other bounded contexts. 
-
-The sequence diagram below demonstrates how the `EvaluateFlightUseCase` coordinates the entire evaluation process:
-
-<img width="1435" height="699" alt="Sequence Diagram" src="https://github.com/user-attachments/assets/999a6194-b1cf-4950-8640-f1462c8191b7" />
-
----
-
-## 5. Domain Class Model and Relationships
-
-Common objects are shared via a Shared Kernel (`common`), while specific result schemas remain tightly encapsulated within their respective bounded contexts:
-
-<img width="1478" height="601" alt="Class Diagram" src="https://github.com/user-attachments/assets/afe797c9-b035-480c-af9b-303fa43c2b02" />
+### Backend
+*   Java 17
+*   Spring Boot 3
+*   Apache Maven
+*   Lombok
+*   Jakarta Validation API
 
 ---
 
-## 6. Dependency Injection & Configuration
+## Core API Endpoints
 
-Spring Beans are wired **explicitly** within configuration files under the `config` package. This completely decouples the core domain and application layers from the Spring Framework dependencies:
+### 1. Evaluate Flight Safety
+*   **Endpoint:** `POST /api/flights/evaluate`
+*   **Request Body:**
+    ```json
+    {
+      "aircraftType": "A320",
+      "departureAirportIcaoCode": "LTFM",
+      "arrivalAirportIcaoCode": "LTDA",
+      "alternativeAirportIcaoCode": "LTAI",
+      "takeoffWeight": 70000.0
+    }
+    ```
+*   **Response Body:**
+    ```json
+    {
+      "status": "SAFE",
+      "reasons": [
+        "All flight performance, navigation, diversion, and fuel requirements are safely met."
+      ]
+    }
+    ```
 
-* **`DecisionBeanConfig.java`**: Wires `DecisionEngine` and `EvaluateFlightUseCase`.
-* **`FuelBeanConfig.java`**: Wires `FuelCalculator` and `CalculateFuelRequirementUseCase`.
-* **`NavigationBeanConfig.java`**: Wires `HaversineCalculator`, `RouteDistanceCalculator`, and `CalculateRouteDistanceUseCase`.
-* **`PerformanceBeanConfig.java`**: Wires `RunWayLengthRule`, `TakeoffPerformanceCalculator`, and `CalculateTakeoffPerformanceUseCase`.
+### 2. Calculate Route Distance
+*   **Endpoint:** `POST /api/navigation/route-distance`
+*   **Request Body:**
+    ```json
+    {
+      "departureAirportIcaoCode": "LTFM",
+      "arrivalAirportIcaoCode": "LTDA"
+    }
+    ```
 
-```
+### 3. Calculate Takeoff Performance
+*   **Endpoint:** `POST /api/performance/takeoff`
+*   **Request Body:**
+    ```json
+    {
+      "aircraftType": "A320",
+      "airportIcaoCode": "LTFM",
+      "takeoffWeight": 70000.0
+    }
+    ```
+
+### 4. Calculate Fuel Requirements
+*   **Endpoint:** `POST /api/fuel/calculate`
+*   **Request Parameters / Body:**
+    ```json
+    {
+      "aircraftType": "A320",
+      "distanceInKm": 1000.0
+    }
+    ```
+
+---
+
+## Getting Started
+
+### Prerequisites
+*   Java Development Kit (JDK) 17 or higher
+*   Maven 3.6+ or the included Maven wrapper (`mvnw`)
+
+### Running the Backend Service
+1. Navigate to the project root directory.
+2. Compile and run the Spring Boot application using Maven:
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+3. The server will start on port `8080`. You can access the API endpoints at `http://localhost:8080`.
+
+
+---
+
+## Static In-Memory Data
+
+The following data sets are configured in the in-memory persistence layer for evaluation:
+
+### Airports
+*   **LTFM (Istanbul Airport):** Runway Length: 3000m, Coordinates: 41.275, 28.751
+*   **LTDA (Hatay Airport):** Runway Length: 3000m, Coordinates: 36.362, 36.282
+*   **LTAI (Antalya Airport):** Runway Length: 3400m, Coordinates: 36.900, 30.800
+
+### Aircraft Specifications
+*   **Airbus A320:** Maximum Takeoff Weight (MTOW): 78,000kg, Fuel Capacity: 19,000kg, Burn Rate: 2.5kg/km, Base Takeoff Distance: 1500m
+*   **Boeing 737:** Maximum Takeoff Weight (MTOW): 79,000kg, Fuel Capacity: 20,000kg, Burn Rate: 2.6kg/km, Base Takeoff Distance: 1600m
+*   **Airbus A330:** Maximum Takeoff Weight (MTOW): 242,000kg, Fuel Capacity: 97,000kg, Burn Rate: 6.0kg/km, Base Takeoff Distance: 2200m
+
