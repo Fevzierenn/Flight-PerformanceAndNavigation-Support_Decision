@@ -22,9 +22,26 @@ Each bounded context (except common and config) strictly follows Clean/Hexagonal
 
 Below is the summary of the purpose of each layer:
 
-Layer	Path Component	Key Responsibilities	Examples
-API	.../<context>/api/	Exposes REST endpoints, handles serialization, maps HTTP requests to DTOs.	PerformanceController, EvaluateFlightRequest
-Application	.../<context>/application/	Orchestrates flow, defines repository interfaces (ports), coordinates domain actions.	EvaluateFlightUseCase, AircraftRepository (port)
-Domain	.../<context>/domain/	Holds pure business logic, rules, value objects, and domain services. Framework-independent.	DecisionEngine, FuelCalculator, RunWayLengthRule
-Infrastructure	.../<context>/infrastructure/	Implements repository interfaces (adapters) using maps, file storage, or external services.	InMemoryPerformanceAircraftRepository
+<img width="1094" height="379" alt="image" src="https://github.com/user-attachments/assets/f590b4b6-e094-41b0-b03c-d72876728ba0" />
 
+4. Decision Orchestration Flow
+The core capability of the application is evaluating flight safety parameters. The decision engine acts as an orchestrator that invokes calculations from other bounded contexts. The sequence diagram below shows how the 
+EvaluateFlightUseCase
+ coordinates the evaluation process:
+<img width="1435" height="699" alt="image" src="https://github.com/user-attachments/assets/999a6194-b1cf-4950-8640-f1462c8191b7" />
+
+5. Domain Class Model and Relationships
+Common objects are shared via a Shared Kernel (common), while specific result schemas are contained inside their respective contexts:
+
+<img width="1478" height="601" alt="image" src="https://github.com/user-attachments/assets/afe797c9-b035-480c-af9b-303fa43c2b02" />
+
+
+6. Dependency Injection & Configuration
+Spring Beans are wired explicitly in configuration files under the 
+config
+ package, decoupling implementation from configuration:
+
+DecisionBeanConfig.java: Wires DecisionEngine and EvaluateFlightUseCase.
+FuelBeanConfig.java: Wires FuelCalculator and CalculateFuelRequirementUseCase.
+NavigationBeanConfig.java: Wires HaversineCalculator, RouteDistanceCalculator, and CalculateRouteDistanceUseCase.
+PerformanceBeanConfig.java: Wires RunWayLengthRule, TakeoffPerformanceCalculator, and CalculateTakeoffPerformanceUseCase.
